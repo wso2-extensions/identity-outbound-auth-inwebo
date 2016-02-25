@@ -27,7 +27,7 @@
 
     <groupId>org.wso2.carbon.extension.identity.authenticator</groupId>
     <artifactId>org.wso2.carbon.extension.identity.authenticator.inwebo</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>WSO2 Carbon Extension - Basecamp Pom</name>
     <url>http://wso2.org</url>
@@ -185,7 +185,7 @@
         <connection>scm:git:https://github.com/wso2-extensions/identity-outbound-auth-inwebo.git</connection>
         <url>https://github.com/wso2-extensions/identity-outbound-auth-inwebo.git</url>
         <developerConnection>scm:git:https://github.com/wso2-extensions/identity-outbound-auth-inwebo.git</developerConnection>
-        <tag>org.wso2.carbon.extension.identity.authenticator.inwebo-1.0.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <build>
