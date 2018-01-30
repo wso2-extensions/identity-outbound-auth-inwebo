@@ -21,7 +21,6 @@ package org.wso2.carbon.identity.authenticator;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
 import org.wso2.carbon.identity.application.authentication.framework.AbstractApplicationAuthenticator;
 import org.wso2.carbon.identity.application.authentication.framework.FederatedApplicationAuthenticator;
 import org.wso2.carbon.identity.application.authentication.framework.LocalApplicationAuthenticator;
@@ -32,18 +31,17 @@ import org.wso2.carbon.identity.application.authentication.framework.model.Authe
 import org.wso2.carbon.identity.application.authentication.framework.util.FrameworkConstants;
 import org.wso2.carbon.identity.application.common.model.Property;
 import org.wso2.carbon.identity.core.util.IdentityTenantUtil;
-
 import org.wso2.carbon.user.api.UserRealm;
 import org.wso2.carbon.user.api.UserStoreException;
 import org.wso2.carbon.user.core.service.RealmService;
 import org.wso2.carbon.utils.multitenancy.MultitenantUtils;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 
 /**
@@ -53,8 +51,6 @@ public class InweboAuthenticator extends AbstractApplicationAuthenticator implem
 
     private static Log log = LogFactory.getLog(InweboAuthenticator.class);
     private static final long serialVersionUID = -4154255583070524018L;
-    private String pushResponse = null;
-    private String userId = null;
 
     /**
      * Check whether the authentication or logout request can be handled by the authenticator
@@ -141,6 +137,7 @@ public class InweboAuthenticator extends AbstractApplicationAuthenticator implem
         int waitTime;
         int retryInterval;
         String username = null;
+        String userId = null;
 
         //Getting the last authenticated local user
         for (Integer stepMap : context.getSequenceConfig().getStepMap().keySet())
@@ -151,23 +148,26 @@ public class InweboAuthenticator extends AbstractApplicationAuthenticator implem
                 break;
             }
         if (username != null) {
-            UserRealm userRealm = null;
+            UserRealm userRealm;
             try {
                 String tenantDomain = MultitenantUtils.getTenantDomain(username);
                 int tenantId = IdentityTenantUtil.getTenantId(tenantDomain);
                 RealmService realmService = IdentityTenantUtil.getRealmService();
-                userRealm = (UserRealm) realmService.getTenantUserRealm(tenantId);
+                userRealm = realmService.getTenantUserRealm(tenantId);
                 username = MultitenantUtils.getTenantAwareUsername(username);
                 if (userRealm != null) {
                     userId = userRealm.getUserStoreManager().getUserClaimValue(username, InweboConstants.INWEBO_USERID,
-                            null).toString();
+                            null);
                 } else {
-                    throw new AuthenticationFailedException(
-                            "Cannot find the user claim for the given userId: " + userId);
+                    throw new AuthenticationFailedException("Could not find the user realm for tenant id:" + tenantId);
                 }
             } catch (UserStoreException e) {
-                throw new AuthenticationFailedException("Error while getting the user realm" + e.getMessage(), e);
+                throw new AuthenticationFailedException("Error while getting the user realm.", e);
             }
+        }
+        if (userId == null) {
+            throw new AuthenticationFailedException("Cannot find the inwebo user id for the given username: " +
+                    username);
         }
         Map<String, String> authenticatorProperties = context.getAuthenticatorProperties();
         if (authenticatorProperties != null) {
@@ -186,7 +186,7 @@ public class InweboAuthenticator extends AbstractApplicationAuthenticator implem
                 retryInterval = Integer.parseInt(InweboConstants.RETRYINTERVAL_DEFAULT);
             }
             PushRestCall push = new PushRestCall(serviceId, p12file, p12password, userId, waitTime, retryInterval);
-            pushResponse = push.run();
+            String pushResponse = push.run();
 
             if (pushResponse.contains(InweboConstants.PUSHRESPONSE)) {
                 if (log.isDebugEnabled()) {
@@ -196,8 +196,6 @@ public class InweboAuthenticator extends AbstractApplicationAuthenticator implem
             } else {
                 throw new AuthenticationFailedException("Authentication failed");
             }
-            pushResponse = null;
-            userId = null;
         } else {
             throw new AuthenticationFailedException("Required parameters are empty");
         }
