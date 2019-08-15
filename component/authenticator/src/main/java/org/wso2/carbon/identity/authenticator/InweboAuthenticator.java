@@ -49,7 +49,7 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class InweboAuthenticator extends AbstractApplicationAuthenticator implements FederatedApplicationAuthenticator {
 
-    private static Log log = LogFactory.getLog(InweboAuthenticator.class);
+    private static final Log log = LogFactory.getLog(InweboAuthenticator.class);
     private static final long serialVersionUID = -4154255583070524018L;
 
     /**
